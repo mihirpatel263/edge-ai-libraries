@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedDiag AI — Intelligent Medical Diagnostic System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            medical: {
+              50:'#f0f9ff',100:'#e0f2fe',200:'#bae6fd',
+              300:'#7dd3fc',400:'#38bdf8',500:'#0ea5e9',
+              600:'#0284c7',700:'#0369a1',800:'#075985',900:'#0c4a6e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Navigation ────────────────────────────────────────────────────── */
+    nav {
+      background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%);
+      box-shadow: 0 2px 12px rgba(3,105,161,0.3);
+    }
+    .nav-link {
+      cursor: pointer;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background 0.18s, color 0.18s;
+      color: #bae6fd;
+      border: 1px solid transparent;
+    }
+    .nav-link.active {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      border-color: rgba(255,255,255,0.25);
+    }
+    .nav-link:not(.active):hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    /* ── Cards ─────────────────────────────────────────────────────────── */
+    .card {
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s;
+    }
+    .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 8px 24px rgba(0,0,0,0.06); }
+
+    /* ── Stat cards ─────────────────────────────────────────────────────── */
+    .stat-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-card .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .stat-card .stat-label { font-size: 0.75rem; color: #64748b; margin-top: 0.35rem; font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; }
+
+    /* ── Buttons ────────────────────────────────────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #fff;
+      font-weight: 600;
+      padding: 0.6rem 1.25rem;
+      border-radius: 9px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: opacity 0.18s, transform 0.12s, box-shadow 0.18s;
+      box-shadow: 0 2px 6px rgba(2,132,199,0.35);
+      letter-spacing: 0.01em;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(2,132,199,0.45); }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+      padding: 0.6rem 1.25rem;
+      border-radius: 9px;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: background 0.18s, border-color 0.18s;
+    }
+    .btn-secondary:hover { background: #e2e8f0; border-color: #cbd5e1; }
+
+    .btn-danger {
+      background: #fff1f2;
+      color: #dc2626;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 9px;
+      border: 1px solid #fecaca;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background 0.18s;
+    }
+    .btn-danger:hover { background: #fee2e2; }
+
+    /* ── Form controls ──────────────────────────────────────────────────── */
+    .input {
+      width: 100%;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 9px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.875rem;
+      color: #1e293b;
+      background: #fff;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      outline: none;
+      font-family: inherit;
+    }
+    .input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+    }
+    .input::placeholder { color: #94a3b8; }
+    select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2.25rem; }
+    textarea.input { resize: vertical; min-height: 3.5rem; }
+
+    .label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    /* ── Section visibility ─────────────────────────────────────────────── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Severity badges ────────────────────────────────────────────────── */
+    .badge-none     { display:inline-flex;align-items:center;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0; }
+    .badge-mild     { display:inline-flex;align-items:center;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:#fef9c3;color:#854d0e;border:1px solid #fde68a; }
+    .badge-moderate { display:inline-flex;align-items:center;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:#ffedd5;color:#9a3412;border:1px solid #fed7aa; }
+    .badge-severe   { display:inline-flex;align-items:center;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5; }
+    .badge-critical { display:inline-flex;align-items:center;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:#3f0000;color:#fca5a5;border:1px solid #7f1d1d;animation:pulse-badge 1.6s ease-in-out infinite; }
+    @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:0.72} }
+
+    /* ── Inference source badge ─────────────────────────────────────────── */
+    .badge-biomedclip { display:inline-flex;align-items:center;gap:4px;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.03em;background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#5b21b6;border:1px solid #c4b5fd; }
+    .badge-medsiglip  { display:inline-flex;align-items:center;gap:4px;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.03em;background:linear-gradient(135deg,#ecfdf5,#d1fae5);color:#065f46;border:1px solid #6ee7b7; }
+    .badge-medgemma   { display:inline-flex;align-items:center;gap:4px;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.03em;background:linear-gradient(135deg,#fff7ed,#ffedd5);color:#9a3412;border:1px solid #fdba74; }
+    .badge-demo       { display:inline-flex;align-items:center;gap:4px;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;letter-spacing:0.03em;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0; }
+    /* ── Model selector ─────────────────────────────────────────────────── */
+
+
+    /* ── Spinner ─────────────────────────────────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2.5px solid #e2e8f0;
+      border-top-color: #0284c7;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      vertical-align: middle;
+      margin-right: 7px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Drop zone ───────────────────────────────────────────────────────── */
+    .drop-zone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.18s, background 0.18s;
+      background: #f8fafc;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #38bdf8;
+      background: #f0f9ff;
+    }
+
+    /* ── Tabs ────────────────────────────────────────────────────────────── */
+    .tab {
+      padding: 0.6rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-bottom: 2.5px solid transparent;
+      cursor: pointer;
+      color: #64748b;
+      transition: color 0.15s, border-color 0.15s;
+      letter-spacing: 0.01em;
+    }
+    .tab.active { border-color: #0284c7; color: #0284c7; }
+    .tab:not(.active):hover { color: #334155; }
+
+    /* ── Finding card ────────────────────────────────────────────────────── */
+    .finding-card {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 4px solid #f59e0b;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+    }
+    .finding-card.primary {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      border-left-color: #f97316;
+    }
+
+    /* ── Probability bars ────────────────────────────────────────────────── */
+    .prob-row { display:flex; align-items:center; gap:0.5rem; font-size:0.73rem; padding: 0.15rem 0; }
+    .prob-label { width: 9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #334155; font-weight: 500; }
+    .prob-label.top { color: #2563eb; font-weight: 700; }
+    .prob-track { flex: 1; height: 7px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+    .prob-fill { height: 100%; border-radius: 99px; background: #94a3b8; transition: width 0.5s ease; }
+    .prob-fill.top { background: linear-gradient(90deg, #3b82f6, #6366f1); }
+    .prob-pct { width: 3rem; text-align: right; color: #64748b; font-variant-numeric: tabular-nums; font-weight: 500; }
+    .prob-pct.top { color: #2563eb; font-weight: 700; }
+
+    /* ── Result / status strips ─────────────────────────────────────────── */
+    .result-header-normal   { border-left: 5px solid #22c55e; }
+    .result-header-abnormal { border-left: 5px solid #f97316; }
+    .result-header-critical { border-left: 5px solid #dc2626; }
+
+    /* ── Page header row ─────────────────────────────────────────────────── */
+    .page-title { font-size: 1.5rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
+    .page-subtitle { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+
+    /* ── Info grid inside result card ───────────────────────────────────── */
+    .info-cell {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+    }
+    .info-cell .ic-label { font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+    .info-cell .ic-value { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+
+    /* ── Recommendation strip ────────────────────────────────────────────── */
+    .rec-strip {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border: 1px solid #bbf7d0;
+      border-left: 4px solid #22c55e;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.875rem;
+      color: #14532d;
+    }
+
+    /* ── Patient row ─────────────────────────────────────────────────────── */
+    .patient-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+    .patient-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-color: #bae6fd; }
+    .patient-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #bae6fd, #7dd3fc);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.9rem; color: #0369a1;
+      flex-shrink: 0;
+    }
+
+    /* ── Modal ───────────────────────────────────────────────────────────── */
+    #patient-modal > div, #report-modal > div {
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+
+    /* ── Misc helpers ────────────────────────────────────────────────────── */
+    .progress-bar { height: 6px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #0284c7, #38bdf8); border-radius: 99px; transition: width 0.5s; }
+    textarea { resize: vertical; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .section-divider { height: 1px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); margin: 1rem 0; }
+
+    /* ── Capability card ─────────────────────────────────────────────────── */
+    .cap-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      padding: 1.4rem;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+    }
+    .cap-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-2px); border-color: #bae6fd; }
+    .cap-icon { width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:0.85rem; }
+
+    /* ── Scrollbar ───────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ Navigation ═══════════════════════════════════ -->
+<nav class="bg-medical-800 text-white shadow-lg sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;background:rgba(255,255,255,0.18);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:1.05rem;font-weight:700;color:#fff;letter-spacing:-0.01em;">MedDiag AI</div>
+        <div style="font-size:0.68rem;color:#7dd3fc;letter-spacing:0.04em;text-transform:uppercase;">Multimodal Diagnostic System</div>
+      </div>
+      <span id="demo-badge" class="hidden" style="font-size:0.68rem;background:#fbbf24;color:#78350f;padding:2px 8px;border-radius:50px;font-weight:700;letter-spacing:0.05em;">DEMO</span>
+    </div>
+    <div class="flex gap-1">
+      <button class="nav-link active" onclick="showSection('dashboard')">Dashboard</button>
+      <button class="nav-link" onclick="showSection('patients')">Patients</button>
+      <button class="nav-link" onclick="showSection('analyze')">Analyze</button>
+      <button class="nav-link" onclick="showSection('diagnose')">Diagnose</button>
+      <button class="nav-link" onclick="showSection('history')">Reports</button>
+    </div>
+    <div id="health-dot" style="width:10px;height:10px;border-radius:50%;background:#475569;" title="System status"></div>
+  </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+<!-- ═══════════════════════════ DASHBOARD ═══════════════════════════════════ -->
+<div id="section-dashboard" class="section active space-y-6">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-subtitle">Intelligent Multimodal Medical Diagnostic System</div>
+    </div>
+    <button class="btn-secondary" onclick="loadDashboard()">↺ Refresh</button>
+  </div>
+
+  <!-- Stats cards -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-patients" style="color:#0284c7;">—</div>
+      <div class="stat-label">Total Patients</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-diagnoses" style="color:#0284c7;">—</div>
+      <div class="stat-label">Diagnoses</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-critical" style="color:#dc2626;">—</div>
+      <div class="stat-label">Critical Cases</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-normal" style="color:#16a34a;">—</div>
+      <div class="stat-label">Normal Results</div>
+    </div>
+  </div>
+
+  <!-- Capabilities -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+    <div class="cap-card" onclick="showSection('analyze')">
+      <div class="cap-icon" style="background:linear-gradient(135deg,#e0f2fe,#bae6fd);">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#0284c7" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <div style="font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:6px;">Image Analysis</div>
+      <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">AI-powered analysis of chest X-ray, CT, MRI, dermatology and pathology images using BiomedCLIP.</div>
+      <div style="margin-top:10px;font-size:0.72rem;color:#0284c7;font-weight:600;">Open &rarr;</div>
+    </div>
+    <div class="cap-card" onclick="showSection('diagnose')">
+      <div class="cap-icon" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        </svg>
+      </div>
+      <div style="font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:6px;">Multimodal Diagnosis</div>
+      <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">Fuses imaging and symptom data for comprehensive, evidence-based diagnostic reports.</div>
+      <div style="margin-top:10px;font-size:0.72rem;color:#7c3aed;font-weight:600;">Open &rarr;</div>
+    </div>
+    <div class="cap-card" onclick="showSection('patients')">
+      <div class="cap-icon" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <div style="font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:6px;">Patient Management</div>
+      <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">Manage patient records, medical histories, allergies and current medications.</div>
+      <div style="margin-top:10px;font-size:0.72rem;color:#16a34a;font-weight:600;">Open &rarr;</div>
+    </div>
+  </div>
+
+  <!-- Severity chart -->
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+      <div style="width:4px;height:20px;background:linear-gradient(180deg,#0284c7,#7dd3fc);border-radius:2px;"></div>
+      <h3 style="font-size:0.95rem;font-weight:700;color:#0f172a;">Severity Distribution</h3>
+    </div>
+    <div id="severity-chart" class="space-y-2">
+      <p class="text-gray-400 text-sm">No data yet. Run a diagnosis to see results here.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ PATIENTS ════════════════════════════════════ -->
+<div id="section-patients" class="section space-y-6">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div class="page-title">Patients</div>
+    <button class="btn-primary" onclick="openPatientModal()">+ Register Patient</button>
+  </div>
+
+  <div class="card">
+    <input id="patient-search" type="text" class="input mb-4" placeholder="Search by name or ID…" oninput="searchPatients()" />
+    <div id="patients-list" class="space-y-2">
+      <p class="text-gray-400 text-sm text-center py-6">Loading patients…</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ANALYZE ═════════════════════════════════════ -->
+<div id="section-analyze" class="section space-y-6">
+  <div class="page-title">Analyze</div>
+
+  <div class="flex gap-2 border-b border-gray-200 mb-4">
+    <div class="tab active" id="tab-image" onclick="switchAnalyzeTab('image')">Image Analysis</div>
+    <div class="tab" id="tab-symptom" onclick="switchAnalyzeTab('symptom')">Symptom Analysis</div>
+  </div>
+
+  <!-- Image analysis form -->
+  <div id="analyze-image-panel">
+    <div class="card space-y-4">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:4px;height:20px;background:linear-gradient(180deg,#0284c7,#38bdf8);border-radius:2px;"></div>
+        <span style="font-size:0.875rem;font-weight:700;color:#0c4a6e;">Medical Image Analysis</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="label">Patient <span class="text-red-500">*</span></label>
+          <select id="img-patient-id" class="input">
+            <option value="">Select patient…</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Imaging Modality <span class="text-red-500">*</span></label>
+          <select id="img-modality" class="input">
+            <option value="chest_xray">Chest X-Ray</option>
+            <option value="ct_scan">CT Scan</option>
+            <option value="mri">MRI</option>
+            <option value="dermatology">Dermatology</option>
+            <option value="pathology">Pathology</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Body Region</label>
+          <input id="img-body-part" type="text" class="input" placeholder="e.g. chest, abdomen, brain" />
+        </div>
+        <div>
+          <label class="label">Clinical Notes</label>
+          <input id="img-clinical-notes" type="text" class="input" placeholder="e.g. shortness of breath for 3 days" />
+        </div>
+      </div>
+
+      <!-- Model selector -->
+      <div>
+        <label class="label" style="margin-bottom:6px;">AI Model for Diagnosis</label>
+        <select id="img-model" class="input">
+          <option value="biomedclip">🔬 BiomedCLIP — microsoft/BiomedCLIP (zero-shot, always available)</option>
+          <option value="medsiglip">🧬 MedSigLIP-448 — google/medsiglip-448 (medical SigLIP, 448×448)</option>
+          <option value="medgemma">🩺 MedGemma 4B — google/medgemma-4b-it (generative VLM, requires HF access)</option>
+        </select>
+      </div>
+
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('img-file').click()">
+        <svg class="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+        <p class="text-gray-500 text-sm font-medium">Drop image here or click to browse</p>
+        <p class="text-gray-400 text-xs mt-1">Supports JPEG, PNG, BMP (max 50 MB)</p>
+        <input id="img-file" type="file" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
+        <div id="file-preview" class="mt-3 hidden">
+          <img id="preview-img" class="max-h-48 mx-auto rounded-lg shadow" />
+          <p id="preview-name" class="text-sm text-gray-600 mt-2"></p>
+        </div>
+      </div>
+
+      <button class="btn-primary w-full" id="btn-analyze-image" onclick="runImageAnalysis()">
+        Analyze Image
+      </button>
+    </div>
+
+    <div id="image-result" class="hidden mt-4"></div>
+  </div>
+
+  <!-- Symptom analysis form -->
+  <div id="analyze-symptom-panel" class="hidden">
+    <div class="card space-y-4">
+      <h3 class="font-semibold text-gray-900">Symptom Analysis</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="label">Patient <span class="text-red-500">*</span></label>
+          <select id="sym-patient-id" class="input">
+            <option value="">Select patient…</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Duration (days)</label>
+          <input id="sym-duration" type="number" min="0" class="input" placeholder="e.g. 7" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="label">Symptoms <span class="text-red-500">*</span></label>
+          <input id="sym-input" type="text" class="input mb-2" placeholder="Type a symptom then press Enter or comma"
+            onkeydown="addSymptomChip(event)" />
+          <div id="symptom-chips" class="flex flex-wrap gap-2 min-h-8"></div>
+          <p class="text-xs text-gray-400 mt-1">
+            Examples: fever, cough, chest pain, headache, fatigue, nausea, shortness of breath
+          </p>
+        </div>
+        <div class="md:col-span-2">
+          <label class="label">Additional History</label>
+          <textarea id="sym-history" class="input" rows="2"
+            placeholder="Any relevant past medical history or additional context…"></textarea>
+        </div>
+      </div>
+      <button class="btn-primary w-full" onclick="runSymptomAnalysis()">Analyze Symptoms</button>
+    </div>
+    <div id="symptom-result" class="hidden mt-4"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ DIAGNOSE ════════════════════════════════════ -->
+<div id="section-diagnose" class="section space-y-6">
+  <div>
+    <div class="page-title">Full Multimodal Diagnosis</div>
+    <div class="page-subtitle">Combines imaging AI and symptom reasoning into a complete clinical report.</div>
+  </div>
+
+  <div class="card space-y-4">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.5rem;">
+      <div style="width:4px;height:20px;background:linear-gradient(180deg,#7c3aed,#a78bfa);border-radius:2px;"></div>
+      <span style="font-size:0.875rem;font-weight:700;color:#4c1d95;">Patient &amp; Clinical Details</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="label">Patient <span class="text-red-500">*</span></label>
+        <select id="dx-patient-id" class="input">
+          <option value="">Select patient…</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">Requesting Physician</label>
+        <input id="dx-physician" type="text" class="input" placeholder="Dr. Jane Smith" />
+      </div>
+      <div class="md:col-span-2">
+        <label class="label">Symptoms (comma-separated)</label>
+        <input id="dx-symptoms" type="text" class="input"
+          placeholder="fever, cough, chest pain, fatigue, shortness of breath" />
+        <p class="text-xs text-gray-400 mt-1">Leave blank to use only imaging.</p>
+      </div>
+      <div>
+        <label class="label">Symptom Duration (days)</label>
+        <input id="dx-duration" type="number" min="0" class="input" placeholder="e.g. 5" />
+      </div>
+      <div>
+        <label class="label">Imaging Modality</label>
+        <select id="dx-modality" class="input">
+          <option value="">No imaging (symptoms only)</option>
+          <option value="chest_xray">Chest X-Ray</option>
+          <option value="ct_scan">CT Scan</option>
+          <option value="mri">MRI</option>
+          <option value="dermatology">Dermatology</option>
+          <option value="pathology">Pathology</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="md:col-span-2">
+        <label class="label">Medical Image (optional)</label>
+        <div class="drop-zone" id="dx-drop-zone" onclick="document.getElementById('dx-file').click()">
+          <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          <p class="text-gray-500 text-sm">Drop image or click to browse</p>
+          <input id="dx-file" type="file" accept="image/*" class="hidden" onchange="handleDxFileSelect(event)" />
+          <div id="dx-file-preview" class="mt-2 hidden">
+            <img id="dx-preview-img" class="max-h-32 mx-auto rounded-lg shadow" />
+            <p id="dx-preview-name" class="text-sm text-gray-600 mt-1"></p>
+          </div>
+        </div>
+      </div>
+      <div class="md:col-span-2">
+        <label class="label">Clinical Notes</label>
+        <textarea id="dx-clinical-notes" class="input" rows="2"
+          placeholder="Any relevant clinical context, current medications, recent history…"></textarea>
+      </div>
+    </div>
+    <button class="btn-primary w-full text-base py-3" onclick="runDiagnosis()">
+      Generate Diagnostic Report
+    </button>
+  </div>
+
+  <div id="diagnosis-result" class="hidden"></div>
+</div>
+
+<!-- ═══════════════════════════ HISTORY ═════════════════════════════════════ -->
+<div id="section-history" class="section space-y-6">
+  <div class="page-title">Reports</div>
+  <div class="card space-y-3">
+    <div class="flex gap-3">
+      <select id="history-patient-select" class="input flex-1">
+        <option value="">Select patient to view history…</option>
+      </select>
+      <button class="btn-secondary" onclick="loadPatientHistory()">Load History</button>
+    </div>
+    <div id="history-list" class="space-y-3">
+      <p class="text-gray-400 text-sm text-center py-4">Select a patient above to view their diagnosis history.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end max-w-7xl -->
+
+<!-- ═══════════════════════════ PATIENT MODAL ═══════════════════════════════ -->
+<div id="patient-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-screen overflow-y-auto">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 id="modal-title" class="text-xl font-bold text-gray-900">Register New Patient</h2>
+        <button onclick="closePatientModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="label">First Name *</label>
+          <input id="p-fname" type="text" class="input" placeholder="Jane" />
+        </div>
+        <div>
+          <label class="label">Last Name *</label>
+          <input id="p-lname" type="text" class="input" placeholder="Doe" />
+        </div>
+        <div>
+          <label class="label">Date of Birth *</label>
+          <input id="p-dob" type="date" class="input" />
+        </div>
+        <div>
+          <label class="label">Gender *</label>
+          <select id="p-gender" class="input">
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Blood Type</label>
+          <select id="p-blood" class="input">
+            <option value="">Unknown</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option>
+            <option>O+</option><option>O-</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Emergency Contact</label>
+          <input id="p-emergency" type="text" class="input" placeholder="+1-555-0100" />
+        </div>
+        <div class="col-span-2">
+          <label class="label">Allergies</label>
+          <input id="p-allergies" type="text" class="input" placeholder="Penicillin, NSAIDs…" />
+        </div>
+        <div class="col-span-2">
+          <label class="label">Chronic Conditions</label>
+          <input id="p-conditions" type="text" class="input" placeholder="Hypertension, Diabetes Type 2…" />
+        </div>
+        <div class="col-span-2">
+          <label class="label">Current Medications</label>
+          <input id="p-medications" type="text" class="input" placeholder="Metformin 500mg, Lisinopril 10mg…" />
+        </div>
+        <div class="col-span-2">
+          <label class="label">Notes</label>
+          <textarea id="p-notes" class="input" rows="2" placeholder="Any additional notes…"></textarea>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button class="btn-primary flex-1" id="btn-save-patient" onclick="savePatient()">Register Patient</button>
+        <button class="btn-secondary" onclick="closePatientModal()">Cancel</button>
+      </div>
+      <div id="modal-error" class="hidden mt-3 text-sm text-red-600 bg-red-50 rounded-lg p-3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ REPORT MODAL ════════════════════════════════ -->
+<div id="report-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-screen overflow-y-auto">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-900">Diagnosis Report</h2>
+        <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div id="report-modal-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ JAVASCRIPT ══════════════════════════════════ -->
+<script>
+// ────────────────── API base URL ──────────────────────────────────────────────
+const BASE = window.location.pathname.replace(/\/ui.*/, '') + '/v1/meddiag';
+
+async function api(method, path, body = null, isForm = false) {
+  const opts = { method, headers: {} };
+  if (body) {
+    if (isForm) {
+      opts.body = body; // FormData
+    } else {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+  }
+  const res = await fetch(BASE + path, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || res.statusText);
+  }
+  return res.json();
+}
+
+// ────────────────── Navigation ─────────────────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event?.target?.classList?.add('active');
+  // Lazy load
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'patients') loadPatients();
+  if (name === 'analyze' || name === 'diagnose') loadPatientSelects();
+  if (name === 'history') { loadPatientSelects(); loadHistorySelect(); }
+}
+
+// ────────────────── Health ─────────────────────────────────────────────────
+async function loadHealth() {
+  try {
+    const h = await api('GET', '/health');
+    const dot = document.getElementById('health-dot');
+    const ok = h.status === 'healthy';
+    dot.style.background = ok ? '#22c55e' : '#ef4444';
+    dot.style.boxShadow = ok ? '0 0 0 3px rgba(34,197,94,0.25)' : '0 0 0 3px rgba(239,68,68,0.25)';
+    dot.title = `Status: ${h.status} | Demo: ${h.demo_mode} | LLM: ${h.llm_available} | OV: ${h.openvino_available}`;
+    if (h.demo_mode) document.getElementById('demo-badge').classList.remove('hidden');
+  } catch (e) {
+    document.getElementById('health-dot').className = 'w-2.5 h-2.5 rounded-full bg-red-400';
+  }
+}
+
+// ────────────────── Dashboard ──────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const s = await api('GET', '/stats');
+    document.getElementById('stat-patients').textContent = s.total_patients;
+    document.getElementById('stat-diagnoses').textContent = s.total_diagnoses;
+    document.getElementById('stat-critical').textContent = s.severity_breakdown?.critical || 0;
+    document.getElementById('stat-normal').textContent = s.severity_breakdown?.none || 0;
+
+    // Severity chart
+    const svCt = document.getElementById('severity-chart');
+    const sevDef = [
+      { key: 'none',     label: 'Normal',   fill: '#22c55e' },
+      { key: 'mild',     label: 'Mild',     fill: '#eab308' },
+      { key: 'moderate', label: 'Moderate', fill: '#f97316' },
+      { key: 'severe',   label: 'Severe',   fill: '#ef4444' },
+      { key: 'critical', label: 'Critical', fill: '#991b1b' },
+    ];
+    const total = s.total_diagnoses || 1;
+    if (s.total_diagnoses > 0) {
+      svCt.innerHTML = sevDef.map(({ key, label, fill }) => {
+        const cnt = s.severity_breakdown?.[key] || 0;
+        const pct = Math.round((cnt / total) * 100);
+        return `<div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:80px;font-size:0.78rem;font-weight:600;color:#475569;">${label}</div>
+          <div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:${pct}%;background:${fill};"></div></div>
+          <div style="width:60px;text-align:right;font-size:0.75rem;color:#64748b;font-variant-numeric:tabular-nums;">${cnt} <span style="color:#94a3b8;">(${pct}%)</span></div>
+        </div>`;
+      }).join('<div style="height:6px;"></div>');
+    } else {
+      svCt.innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No diagnoses yet. Run an analysis to see results here.</p>';
+    }
+  } catch (e) {
+    console.error('Dashboard error:', e);
+  }
+}
+
+// ────────────────── Patients ───────────────────────────────────────────────
+let allPatients = [];
+
+async function loadPatients() {
+  try {
+    allPatients = await api('GET', '/patients?limit=200');
+    renderPatients(allPatients);
+  } catch (e) {
+    document.getElementById('patients-list').innerHTML =
+      `<p class="text-red-500 text-sm">Error: ${e.message}</p>`;
+  }
+}
+
+function renderPatients(list) {
+  const el = document.getElementById('patients-list');
+  if (!list.length) {
+    el.innerHTML = '<p class="text-gray-400 text-sm text-center py-6">No patients registered yet.</p>';
+    return;
+  }
+  el.innerHTML = list.map(p => `
+    <div class="patient-row">
+      <div class="patient-avatar">${p.first_name[0]}${p.last_name[0]}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;color:#0f172a;font-size:0.9rem;">${p.first_name} ${p.last_name}</div>
+        <div style="font-size:0.72rem;color:#64748b;margin-top:1px;">ID #${p.id} &nbsp;·&nbsp; ${p.gender.charAt(0).toUpperCase() + p.gender.slice(1)} &nbsp;·&nbsp; DOB ${p.date_of_birth}${p.blood_type ? ' &nbsp;·&nbsp; ' + p.blood_type : ''}</div>
+        ${p.chronic_conditions ? `<div style="font-size:0.72rem;color:#c2410c;margin-top:2px;">⚕ ${p.chronic_conditions}</div>` : ''}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn-secondary" style="font-size:0.75rem;padding:0.35rem 0.75rem;" onclick="viewPatientHistory(${p.id})">History</button>
+        <button class="btn-danger" onclick="deletePatient(${p.id})">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function searchPatients() {
+  const q = document.getElementById('patient-search').value.toLowerCase();
+  renderPatients(allPatients.filter(p =>
+    `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) ||
+    String(p.id).includes(q)
+  ));
+}
+
+async function loadPatientSelects() {
+  try {
+    if (!allPatients.length) allPatients = await api('GET', '/patients?limit=200');
+    const opts = '<option value="">Select patient…</option>' +
+      allPatients.map(p => `<option value="${p.id}">#${p.id} — ${p.first_name} ${p.last_name}</option>`).join('');
+    ['img-patient-id', 'sym-patient-id', 'dx-patient-id', 'history-patient-select'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = opts;
+    });
+  } catch (e) { console.error(e); }
+}
+
+async function loadHistorySelect() {
+  await loadPatientSelects();
+}
+
+function viewPatientHistory(patientId) {
+  showSection('history');
+  document.getElementById('history-patient-select').value = patientId;
+  loadPatientHistory();
+}
+
+// ────────────────── Patient Modal ─────────────────────────────────────────
+let editingPatientId = null;
+
+function openPatientModal() {
+  editingPatientId = null;
+  document.getElementById('modal-title').textContent = 'Register New Patient';
+  ['p-fname','p-lname','p-allergies','p-conditions','p-medications','p-notes','p-emergency'].forEach(id =>
+    document.getElementById(id).value = '');
+  document.getElementById('p-dob').value = '';
+  document.getElementById('p-gender').value = 'female';
+  document.getElementById('p-blood').value = '';
+  document.getElementById('modal-error').classList.add('hidden');
+  document.getElementById('patient-modal').classList.remove('hidden');
+}
+
+function closePatientModal() {
+  document.getElementById('patient-modal').classList.add('hidden');
+}
+
+async function savePatient() {
+  const fname = document.getElementById('p-fname').value.trim();
+  const lname = document.getElementById('p-lname').value.trim();
+  const dob = document.getElementById('p-dob').value;
+  const gender = document.getElementById('p-gender').value;
+  if (!fname || !lname || !dob) {
+    showModalError('First name, last name and date of birth are required.');
+    return;
+  }
+  const payload = {
+    first_name: fname, last_name: lname, date_of_birth: dob, gender,
+    blood_type: document.getElementById('p-blood').value || null,
+    emergency_contact: document.getElementById('p-emergency').value.trim() || null,
+    allergies: document.getElementById('p-allergies').value.trim() || null,
+    chronic_conditions: document.getElementById('p-conditions').value.trim() || null,
+    current_medications: document.getElementById('p-medications').value.trim() || null,
+    notes: document.getElementById('p-notes').value.trim() || null,
+  };
+  const btn = document.getElementById('btn-save-patient');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Saving…';
+  try {
+    await api('POST', '/patients', payload);
+    closePatientModal();
+    await loadPatients();
+    await loadPatientSelects();
+  } catch (e) {
+    showModalError(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Register Patient';
+  }
+}
+
+function showModalError(msg) {
+  const el = document.getElementById('modal-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+async function deletePatient(id) {
+  if (!confirm(`Delete patient #${id}? This will also remove all their diagnoses.`)) return;
+  try {
+    await api('DELETE', `/patients/${id}`);
+    allPatients = allPatients.filter(p => p.id !== id);
+    renderPatients(allPatients);
+    await loadPatientSelects();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+// ────────────────── Analyze — tabs ────────────────────────────────────────
+function switchAnalyzeTab(tab) {
+  ['image', 'symptom'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`analyze-${t}-panel`).classList.toggle('hidden', t !== tab);
+  });
+}
+
+// ────────────────── Image Analysis ────────────────────────────────────────
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('preview-img').src = ev.target.result;
+    document.getElementById('preview-name').textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    document.getElementById('file-preview').classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleDxFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('dx-preview-img').src = ev.target.result;
+    document.getElementById('dx-preview-name').textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    document.getElementById('dx-file-preview').classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Drag-and-drop for analyze
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer(); dt.items.add(file);
+    document.getElementById('img-file').files = dt.files;
+    handleFileSelect({ target: { files: dt.files } });
+  }
+});
+
+async function runImageAnalysis() {
+  const patientId = document.getElementById('img-patient-id').value;
+  const modality = document.getElementById('img-modality').value;
+  const file = document.getElementById('img-file').files[0];
+  if (!patientId) { alert('Please select a patient.'); return; }
+  if (!file) { alert('Please select an image file.'); return; }
+
+  const btn = document.getElementById('btn-analyze-image');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Analyzing…';
+
+  const modelChoice = document.getElementById('img-model').value || 'biomedclip';
+  const fd = new FormData();
+  fd.append('patient_id', patientId);
+  fd.append('modality', modality);
+  fd.append('image', file);
+  fd.append('model_choice', modelChoice);
+  const bodyPart = document.getElementById('img-body-part').value;
+  const notes = document.getElementById('img-clinical-notes').value;
+  if (bodyPart) fd.append('body_part', bodyPart);
+  if (notes) fd.append('clinical_notes', notes);
+
+  try {
+    const result = await api('POST', '/analyze/image', fd, true);
+    renderImageResult(result);
+  } catch (e) {
+    document.getElementById('image-result').innerHTML =
+      `<div class="card border-red-200 bg-red-50"><p class="text-red-600 text-sm">Error: ${e.message}</p></div>`;
+    document.getElementById('image-result').classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Analyze Image';
+  }
+}
+
+function renderImageResult(r) {
+  const el = document.getElementById('image-result');
+
+  // Inference source badge
+  const srcLabel  = (r.inference_source || 'demo').toLowerCase();
+  const modelName  = srcLabel === 'biomedclip' ? 'BiomedCLIP'
+    : srcLabel === 'medsiglip' ? 'MedSigLIP-448'
+    : srcLabel === 'medgemma'  ? 'MedGemma 4B'
+    : srcLabel === 'openvino'  ? 'OpenVINO'
+    : 'Model';
+  const srcBadge  = srcLabel === 'biomedclip'
+    ? `<span class="badge-biomedclip">&#x2B50; BiomedCLIP</span>`
+    : srcLabel === 'medsiglip'
+    ? `<span class="badge-medsiglip">&#x1F9EC; MedSigLIP-448</span>`
+    : srcLabel === 'medgemma'
+    ? `<span class="badge-medgemma">&#x1FA7A; MedGemma 4B</span>`
+    : srcLabel === 'openvino'
+    ? `<span style="display:inline-flex;align-items:center;padding:0.2rem 0.65rem;border-radius:50px;font-size:0.7rem;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">OpenVINO</span>`
+    : `<span class="badge-demo">Demo Mode</span>`;
+
+  // Class probability bars
+  const probsHtml = (r.class_probabilities && r.class_probabilities.length) ? `
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:1rem;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.75rem;">
+        <div style="width:4px;height:16px;background:linear-gradient(180deg,#6366f1,#3b82f6);border-radius:2px;"></div>
+        <span style="font-size:0.78rem;font-weight:700;color:#334155;letter-spacing:0.02em;">MODEL PROBABILITY DISTRIBUTION</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        ${r.class_probabilities.map((cp, i) => {
+          const pct   = (cp.probability * 100).toFixed(2);
+          const isTop = i === 0;
+          return `<div class="prob-row">
+            <div class="prob-label${isTop ? ' top' : ''}" title="${cp.label}">${cp.label}</div>
+            <div class="prob-track"><div class="prob-fill${isTop ? ' top' : ''}" style="width:${pct}%"></div></div>
+            <div class="prob-pct${isTop ? ' top' : ''}">${pct}%</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  const borderClass = r.status === 'normal' ? 'result-header-normal' : (r.severity === 'critical' ? 'result-header-critical' : 'result-header-abnormal');
+
+  // ── VLM Report HTML — only shown when MedGemma was selected
+  const vlm = r.vlm_report;
+  const vlmHtml = r.inference_source !== 'medgemma' ? '' : vlm ? (() => {
+    const sect = (title, icon, content, bg, border, hdrColor) => content ? `
+      <div style="border:1px solid ${border};border-radius:12px;overflow:hidden;margin-bottom:10px;">
+        <div style="background:${bg};padding:9px 14px;border-bottom:1px solid ${border};display:flex;align-items:center;gap:7px;">
+          <span style="font-size:0.95rem;">${icon}</span>
+          <span style="font-weight:700;font-size:0.8rem;color:${hdrColor};text-transform:uppercase;letter-spacing:0.04em;">${title}</span>
+        </div>
+        <div style="padding:12px 14px;">
+          <div style="font-size:0.85rem;color:#1e293b;line-height:1.7;white-space:pre-wrap;word-break:break-word;">${escHtml(content)}</div>
+        </div>
+      </div>` : '';
+    return `
+      <div style="background:linear-gradient(135deg,#faf5ff,#f5f3ff);border:2px solid #c4b5fd;border-radius:14px;padding:1.1rem;margin-bottom:1rem;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+          <div style="width:6px;height:24px;background:linear-gradient(180deg,#7c3aed,#4f46e5);border-radius:3px;"></div>
+          <div>
+            <div style="font-size:0.9rem;font-weight:800;color:#3b0764;letter-spacing:0.01em;">AI Vision Analysis — MedGemma + MedSigLIP</div>
+            <div style="font-size:0.68rem;color:#7c3aed;letter-spacing:0.04em;">${vlm.model_id}</div>
+          </div>
+          <span style="margin-left:auto;font-size:0.68rem;background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;padding:2px 8px;border-radius:50px;font-weight:700;">VLM REPORT</span>
+        </div>
+        ${sect('Radiological Findings', '🔬', vlm.findings,          '#f8fafc','#e2e8f0','#0f172a')}
+        ${sect('Primary Diagnosis',     '🩺', vlm.primary_diagnosis, '#f0f9ff','#bae6fd','#0c4a6e')}
+        ${sect('Severity Assessment',   '⚠️',  vlm.severity,          '#fff7ed','#fed7aa','#7c2d12')}
+        ${sect('Differential Diagnoses','🔄', vlm.differential_diagnoses,'#faf5ff','#e9d5ff','#4c1d95')}
+        ${sect('Treatment & Recommendations','💊', vlm.treatment,    '#f0fdf4','#bbf7d0','#14532d')}
+      </div>`;
+  })() : `
+    <div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:1rem;margin-bottom:1rem;text-align:center;">
+      <div style="font-size:0.8rem;color:#64748b;"><span class="spinner"></span>MedGemma report loading — model initialising on first call (downloading ~8 GB, subsequent calls are fast)</div>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="card ${borderClass}" style="space-y:0;">
+      <!-- header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+        <div>
+          <div style="font-size:1.15rem;font-weight:700;color:#0f172a;line-height:1.3;">${r.primary_diagnosis}</div>
+          <div style="font-size:0.78rem;color:#64748b;margin-top:3px;">Modality: ${r.modality || '—'} &nbsp;·&nbsp; Region: ${r.body_region || '—'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          ${srcBadge}
+          <span class="badge-${r.severity}">${r.severity.toUpperCase()}</span>
+        </div>
+      </div>
+
+      <!-- info grid -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem;">
+        <div class="info-cell">
+          <div class="ic-label">Status</div>
+          <div class="ic-value" style="color:${r.status === 'normal' ? '#16a34a' : '#dc2626'}">${r.status.toUpperCase()}</div>
+        </div>
+        <div class="info-cell">
+          <div class="ic-label">Confidence</div>
+          <div class="ic-value">${(r.confidence_score * 100).toFixed(1)}%</div>
+        </div>
+        <div class="info-cell">
+          <div class="ic-label">Processing</div>
+          <div class="ic-value">${r.processing_time_ms.toFixed(0)} ms</div>
+        </div>
+      </div>
+
+      <!-- VLM Natural-Language Report (primary result) -->
+      ${vlmHtml}
+
+      <!-- Probability distribution (secondary / supporting) -->
+      ${probsHtml ? `<details style="margin-bottom:1rem;"><summary style="cursor:pointer;font-size:0.75rem;font-weight:700;color:#475569;letter-spacing:0.04em;text-transform:uppercase;padding:6px 0;">&#9658; ${modelName} Probability Distribution</summary><div style="margin-top:8px;">${probsHtml}</div></details>` : ''}
+
+      ${r.findings.length ? `
+        <details style="margin-bottom:1rem;">
+          <summary style="cursor:pointer;font-size:0.75rem;font-weight:700;color:#475569;letter-spacing:0.04em;text-transform:uppercase;padding:6px 0;">&#9658; ${modelName} Findings (${r.findings.length})</summary>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-top:8px;">
+          ${r.findings.map((f, i) => `
+            <div class="finding-card${i === 0 ? ' primary' : ''}">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+                <span style="font-weight:700;font-size:0.875rem;color:#1e293b;">${f.label}</span>
+                <span style="font-size:0.72rem;font-weight:700;color:#92400e;background:#fef3c7;padding:1px 8px;border-radius:50px;">${(f.confidence * 100).toFixed(1)}%</span>
+              </div>
+              <div style="font-size:0.8rem;color:#57534e;">${f.description}</div>
+            </div>`).join('')}
+          </div>
+        </details>` : ''}
+
+      ${r.differential_diagnoses.length ? `
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:0.75rem;font-weight:700;color:#475569;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">${modelName} Differentials</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">${r.differential_diagnoses.map(d =>
+            `<span style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-size:0.75rem;font-weight:500;padding:3px 10px;border-radius:50px;">${d}</span>`).join('')}</div>
+        </div>` : ''}
+
+      <div class="rec-strip">
+        <span style="font-weight:700;">Recommendation &nbsp;&rarr;&nbsp;</span>${r.recommendation}
+      </div>
+    </div>`;
+  el.classList.remove('hidden');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ────────────────── Symptom chips ─────────────────────────────────────────
+let symptoms = [];
+
+function addSymptomChip(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = document.getElementById('sym-input').value.trim().replace(/,$/, '');
+    if (val && !symptoms.includes(val.toLowerCase())) {
+      symptoms.push(val.toLowerCase());
+      renderChips();
+    }
+    document.getElementById('sym-input').value = '';
+  }
+}
+
+function renderChips() {
+  document.getElementById('symptom-chips').innerHTML = symptoms.map((s, i) => `
+    <span class="flex items-center gap-1 bg-medical-100 text-medical-800 text-xs px-2.5 py-1 rounded-full">
+      ${s}
+      <button onclick="removeSymptom(${i})" class="ml-1 text-medical-500 hover:text-medical-700">×</button>
+    </span>`).join('');
+}
+
+function removeSymptom(i) {
+  symptoms.splice(i, 1);
+  renderChips();
+}
+
+async function runSymptomAnalysis() {
+  // Also allow comma in the input field at time of submit
+  const rawInput = document.getElementById('sym-input').value.trim();
+  if (rawInput) {
+    rawInput.split(',').forEach(s => {
+      const v = s.trim().toLowerCase();
+      if (v && !symptoms.includes(v)) symptoms.push(v);
+    });
+    document.getElementById('sym-input').value = '';
+    renderChips();
+  }
+
+  const patientId = document.getElementById('sym-patient-id').value;
+  if (!patientId) { alert('Please select a patient.'); return; }
+  if (!symptoms.length) { alert('Please enter at least one symptom.'); return; }
+
+  const payload = {
+    patient_id: parseInt(patientId),
+    symptoms,
+    duration_days: parseInt(document.getElementById('sym-duration').value) || null,
+    additional_history: document.getElementById('sym-history').value.trim() || null,
+  };
+
+  try {
+    const result = await api('POST', '/analyze/symptoms', payload);
+    renderSymptomResult(result);
+  } catch (e) {
+    document.getElementById('symptom-result').innerHTML =
+      `<div class="card border-red-200 bg-red-50"><p class="text-red-600 text-sm">Error: ${e.message}</p></div>`;
+    document.getElementById('symptom-result').classList.remove('hidden');
+  }
+}
+
+function renderSymptomResult(r) {
+  const urgMap = { routine: { bg:'#f0fdf4', border:'#bbf7d0', color:'#15803d', label:'Routine' }, urgent: { bg:'#fff7ed', border:'#fed7aa', color:'#c2410c', label:'Urgent' }, emergency: { bg:'#fff1f2', border:'#fecaca', color:'#b91c1c', label:'Emergency' } };
+  const urg = urgMap[r.urgency] || { bg:'#f8fafc', border:'#e2e8f0', color:'#64748b', label:r.urgency };
+  const el = document.getElementById('symptom-result');
+  el.innerHTML = `
+    <div class="card" style="border-left:5px solid ${urg.color};">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+        <div style="font-size:1.05rem;font-weight:700;color:#0f172a;">Symptom Analysis</div>
+        <span style="font-size:0.75rem;font-weight:700;background:${urg.bg};color:${urg.color};border:1px solid ${urg.border};padding:4px 12px;border-radius:50px;text-transform:uppercase;letter-spacing:0.04em;">${urg.label} Urgency</span>
+      </div>
+      ${r.red_flags.length ? `
+        <div style="background:#fff1f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;padding:0.75rem 1rem;margin-bottom:1rem;">
+          <div style="font-size:0.78rem;font-weight:700;color:#b91c1c;margin-bottom:4px;">&#x1F6A8; Red Flags Detected</div>
+          <div style="font-size:0.82rem;color:#dc2626;">${r.red_flags.join(', ')}</div>
+        </div>` : ''}
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:0.75rem;font-weight:700;color:#475569;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;">Disease Probability Matches</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${r.matched_diseases.slice(0, 5).map((m, i) => `
+            <div style="padding:10px 12px;border-radius:10px;background:${i===0?'#f0f9ff':'#f8fafc'};border:1px solid ${i===0?'#bae6fd':'#e2e8f0'};">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-weight:${i===0?700:600};color:${i===0?'#0284c7':'#374151'};font-size:0.875rem;">${m.disease}${m.icd10_code ? ` <span style="color:#94a3b8;font-weight:400;font-size:0.72rem;">(${m.icd10_code})</span>` : ''}</span>
+                <span style="font-weight:700;color:${i===0?'#0284c7':'#64748b'};font-size:0.85rem;">${(m.probability * 100).toFixed(1)}%</span>
+              </div>
+              <div class="progress-bar" style="margin-bottom:6px;"><div class="progress-fill" style="width:${m.probability*100}%;background:${i===0?'#0284c7':'#94a3b8'};"></div></div>
+              <div style="font-size:0.72rem;color:#64748b;">Matching: ${m.matching_symptoms.join(', ')}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      ${r.recommended_tests.length ? `
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:0.75rem;font-weight:700;color:#475569;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">Recommended Tests</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+            ${r.recommended_tests.slice(0, 6).map(t =>
+              `<div style="font-size:0.78rem;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;padding:6px 10px;border-radius:8px;">&#x1F9EA; ${t}</div>`).join('')}
+          </div>
+        </div>` : ''}
+      ${r.specialist_referral ? `
+        <div style="background:#faf5ff;border:1px solid #e9d5ff;border-left:4px solid #7c3aed;border-radius:10px;padding:0.75rem 1rem;font-size:0.82rem;color:#4c1d95;">
+          <strong>Specialist Referral:</strong> ${r.specialist_referral}
+        </div>` : ''}
+    </div>`;
+  el.classList.remove('hidden');
+}
+
+// ────────────────── Full Diagnosis ────────────────────────────────────────
+async function runDiagnosis() {
+  const patientId = document.getElementById('dx-patient-id').value;
+  const symptoms = document.getElementById('dx-symptoms').value.trim();
+  const modality = document.getElementById('dx-modality').value;
+  const file = document.getElementById('dx-file').files[0];
+
+  if (!patientId) { alert('Please select a patient.'); return; }
+  if (!symptoms && (!file || !modality)) {
+    alert('Provide symptoms OR an image with a modality (or both).'); return;
+  }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Generating Report…';
+
+  const fd = new FormData();
+  fd.append('patient_id', patientId);
+  const physician = document.getElementById('dx-physician').value.trim();
+  if (physician) fd.append('requesting_physician', physician);
+  if (symptoms) fd.append('symptoms', symptoms);
+  const dur = document.getElementById('dx-duration').value;
+  if (dur) fd.append('duration_days', dur);
+  if (file && modality) {
+    fd.append('image', file);
+    fd.append('modality', modality);
+  }
+  const notes = document.getElementById('dx-clinical-notes').value.trim();
+  if (notes) fd.append('clinical_notes', notes);
+
+  try {
+    const report = await api('POST', '/diagnose', fd, true);
+    renderDiagnosisReport(report);
+    loadDashboard();
+  } catch (e) {
+    document.getElementById('diagnosis-result').innerHTML =
+      `<div class="card border-red-200 bg-red-50"><p class="text-red-600">Error: ${e.message}</p></div>`;
+    document.getElementById('diagnosis-result').classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Diagnostic Report';
+  }
+}
+
+function renderDiagnosisReport(r) {
+  const el = document.getElementById('diagnosis-result');
+  el.innerHTML = `
+    <div class="card result-header-abnormal" style="border-left-color:#0284c7;">
+      <!-- Header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+        <div>
+          <div style="font-size:1.2rem;font-weight:800;color:#0f172a;">Diagnostic Report</div>
+          <div style="font-size:0.78rem;color:#64748b;margin-top:3px;">Patient: <strong>${r.patient_name}</strong> &middot; ID #${r.patient_id} &middot; ${new Date(r.timestamp).toLocaleString()}</div>
+          ${r.requesting_physician ? `<div style="font-size:0.78rem;color:#64748b;">Physician: ${r.requesting_physician}</div>` : ''}
+        </div>
+        <div style="text-align:right;">
+          <span class="badge-${r.severity}">${r.severity.toUpperCase()}</span>
+          <div style="font-size:0.7rem;color:#94a3b8;margin-top:4px;">${r.processing_time_ms.toFixed(0)} ms</div>
+        </div>
+      </div>
+
+      <!-- Primary Diagnosis -->
+      <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:12px;padding:1rem;margin-bottom:1rem;">
+        <div style="font-size:0.7rem;font-weight:700;color:#0284c7;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Primary Diagnosis</div>
+        <div style="font-size:1.15rem;font-weight:800;color:#0c4a6e;">${r.primary_diagnosis}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+          <span style="font-size:0.78rem;color:#0369a1;font-weight:600;">Confidence:</span>
+          <div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:${r.confidence * 100}%;"></div></div>
+          <span style="font-size:0.78rem;font-weight:700;color:#0369a1;">${(r.confidence * 100).toFixed(1)}%</span>
+        </div>
+      </div>
+
+      ${r.differential_diagnoses.length ? `
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:0.75rem;font-weight:700;color:#475569;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">Differential Diagnoses</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${r.differential_diagnoses.map(d => `<span style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-size:0.75rem;font-weight:500;padding:3px 10px;border-radius:50px;">${d}</span>`).join('')}
+          </div>
+        </div>` : ''}
+
+      <!-- Report sections -->
+      ${[
+        ['Clinical Summary', r.clinical_summary, '#f8fafc', '#cbd5e1', '#0f172a', '#64748b'],
+        ['Findings',         r.findings,         '#eff6ff', '#bfdbfe', '#1e3a5f', '#1d4ed8'],
+        ['Assessment',       r.assessment,       '#faf5ff', '#e9d5ff', '#3b0764', '#7c3aed'],
+        ['Plan',             r.plan,             '#f0fdf4', '#bbf7d0', '#14532d', '#16a34a'],
+        ['Follow-up',        r.follow_up,        '#fff7ed', '#fed7aa', '#7c2d12', '#ea580c'],
+      ].map(([title, content, bg, border, hdr, hdrFg]) => content ? `
+        <div style="border:1px solid ${border};border-radius:12px;overflow:hidden;margin-bottom:10px;">
+          <div style="background:${bg};padding:8px 14px;border-bottom:1px solid ${border};">
+            <span style="font-weight:700;color:${hdr};font-size:0.8rem;">${title}</span>
+          </div>
+          <div style="padding:12px 14px;">
+            <pre style="font-size:0.82rem;color:#374151;font-family:inherit;line-height:1.65;white-space:pre-wrap;word-break:break-word;">${escHtml(content)}</pre>
+          </div>
+        </div>` : '').join('')}
+
+      <div style="display:flex;gap:8px;padding-top:8px;">
+        <button class="btn-secondary" onclick="openFullReport('${r.diagnosis_id}')">View Full Report</button>
+        <button class="btn-secondary" onclick="printReport()">Print</button>
+      </div>
+    </div>`;
+  el.classList.remove('hidden');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ────────────────── History ────────────────────────────────────────────────
+async function loadPatientHistory() {
+  const patientId = document.getElementById('history-patient-select').value;
+  if (!patientId) return;
+  const el = document.getElementById('history-list');
+  el.innerHTML = '<p class="text-gray-400 text-sm text-center py-4"><span class="spinner"></span>Loading…</p>';
+  try {
+    const res = await api('GET', `/patients/${patientId}/history?limit=50`);
+    if (!res.items.length) {
+      el.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No diagnoses found for this patient.</p>';
+      return;
+    }
+    el.innerHTML = res.items.map(item => `
+      <div class="patient-row">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;color:#0f172a;font-size:0.9rem;">${item.primary_diagnosis}</div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">${new Date(item.timestamp).toLocaleString()}${item.requesting_physician ? ' &middot; ' + item.requesting_physician : ''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span class="badge-${item.severity}">${item.severity.toUpperCase()}</span>
+          <span style="font-size:0.78rem;color:#64748b;font-variant-numeric:tabular-nums;">${(item.confidence * 100).toFixed(0)}%</span>
+          <button class="btn-secondary" style="font-size:0.75rem;padding:0.35rem 0.75rem;" onclick="openFullReport('${item.diagnosis_id}')">View</button>
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    el.innerHTML = `<p class="text-red-500 text-sm">Error: ${e.message}</p>`;
+  }
+}
+
+// ────────────────── Report Modal ──────────────────────────────────────────
+async function openFullReport(diagnosisId) {
+  const modal = document.getElementById('report-modal');
+  const content = document.getElementById('report-modal-content');
+  content.innerHTML = '<p class="text-gray-400 text-center py-8"><span class="spinner"></span>Loading report…</p>';
+  modal.classList.remove('hidden');
+  try {
+    const r = await api('GET', `/diagnoses/${diagnosisId}`);
+    content.innerHTML = `
+      <div class="space-y-4">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">${r.primary_diagnosis}</h3>
+            <p class="text-sm text-gray-500">Patient: ${r.patient_name} · ${new Date(r.timestamp).toLocaleString()}</p>
+          </div>
+          <span class="badge-${r.severity}">${r.severity.toUpperCase()}</span>
+        </div>
+        ${[
+          ['Clinical Summary', r.clinical_summary],
+          ['Findings', r.findings],
+          ['Assessment', r.assessment],
+          ['Plan', r.plan],
+          ['Follow-up', r.follow_up],
+        ].filter(([,v]) => v).map(([t, v]) => `
+          <div>
+            <p class="font-semibold text-gray-800 text-sm mb-1">${t}</p>
+            <pre class="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 font-sans leading-relaxed">${escHtml(v)}</pre>
+          </div>`).join('')}
+        <div class="text-xs text-gray-400 pt-2 border-t">
+          ID: ${r.diagnosis_id} · Processed in ${r.processing_time_ms.toFixed(0)} ms
+          ${r.requesting_physician ? '· Physician: ' + r.requesting_physician : ''}
+        </div>
+      </div>`;
+  } catch (e) {
+    content.innerHTML = `<p class="text-red-500">Error: ${e.message}</p>`;
+  }
+}
+
+function closeReportModal() {
+  document.getElementById('report-modal').classList.add('hidden');
+}
+
+function printReport() {
+  window.print();
+}
+
+// ────────────────── Utilities ─────────────────────────────────────────────
+function escHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Close modals on background click
+document.getElementById('patient-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePatientModal();
+});
+document.getElementById('report-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeReportModal();
+});
+
+// ────────────────── Init ──────────────────────────────────────────────────
+(async () => {
+  await loadHealth();
+  await loadDashboard();
+  await loadPatientSelects();
+})();
+</script>
+</body>
+</html>

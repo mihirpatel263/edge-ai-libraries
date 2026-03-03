@@ -1,0 +1,61 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  nginx:
+    image: nginxinc/nginx-unprivileged:1.29.2
+    container_name: meddiag-nginx
+    ports:
+      - "${APP_PORT:-8200}:8200"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      meddiag:
+        condition: service_healthy
+    networks:
+      - meddiag_network
+    restart: unless-stopped
+
+  meddiag:
+    image: ${IMAGE_NAME:-meddiag-system:latest}
+    container_name: meddiag-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8201:8080"
+    environment:
+      - DEMO_MODE=${DEMO_MODE:-true}
+      - LLM_ENDPOINT_URL=${LLM_ENDPOINT_URL:-}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4}
+      - OPENVINO_CHEST_XRAY_MODEL=${OPENVINO_CHEST_XRAY_MODEL:-}
+      - OPENVINO_CT_MODEL=${OPENVINO_CT_MODEL:-}
+      - OPENVINO_MRI_MODEL=${OPENVINO_MRI_MODEL:-}
+      - UPLOAD_DIR=/app/uploads
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/medical_diagnostic.db
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-*}
+      - no_proxy=${no_proxy:-}
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+    volumes:
+      - meddiag_db:/app/data
+      - meddiag_uploads:/app/uploads
+    networks:
+      - meddiag_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/v1/meddiag/health || exit 1"]
+      interval: 20s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+
+volumes:
+  meddiag_db:
+    driver: local
+  meddiag_uploads:
+    driver: local
+
+networks:
+  meddiag_network:
+    driver: bridge
